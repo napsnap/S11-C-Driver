@@ -18,6 +18,7 @@ The driver takes care of all logic, parsing and state changes. All the user has 
 
 ## Examples
 Get started with this driver by browsing the examples folder:
+https://github.com/napsnap/S11-C-Driver/tree/main/examples/
 
 ## Sensor documentation
 Sensair provides documentation with specs, functional description etc on https://senseair.com/products/power-counts/sunrise/
