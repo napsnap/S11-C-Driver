@@ -12,7 +12,7 @@ All sensor features are supported including:
 * Sensor configuration
 * Sensor info
 
-# Compatability & Integration
+## Compatability & Integration
 This driver is intended for microcontroller use, but can be used by any OS with a C compiler and an I2C peripheral or interface.
 The driver takes care of all logic, parsing and state changes. All the user has to provide are callbacks for I2C read and write functions.
 
