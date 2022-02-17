@@ -243,6 +243,7 @@ typedef int8_t (*s11_delay_fptr_t)(uint32_t period);
 /** 
 * @brief This structure contains measurement variables and data
 * @ingroup measurement
+* @details
 * R = readable variable\n
 * W = writeable variable\n
 * P = private variable, internal use, do not read/write
@@ -274,7 +275,8 @@ struct s11_meas_res {
 
 /**
 * @brief This structure contains sensor device information
-* @ingroup info_status
+* @ingroup core
+* @details
 * R = readable variable\n
 * W = writeable variable\n
 * P = private variable, internal use, do not read/write
@@ -289,6 +291,7 @@ struct s11_info {
 /**
 * @brief Structure containing calibration data
 * @ingroup calibration
+* @details
 * R = readable variable\n
 * W = writeable variable\n
 * P = private variable, internal use, do not read/write
@@ -305,6 +308,7 @@ struct s11_cal {
 /**
 * @brief Structure containing device settings
 * @ingroup settings
+* @details
 * EE = eeprom variable, restricted no of writes
 * R = readable variable\n
 * W = writeable variable\n
@@ -333,7 +337,8 @@ struct s11_dev_sett {
 
 /**
 * @brief Main structure containing device state information and settings
-* @ingroup settings
+* @ingroup core
+* @details
 * R = readable variable\n
 * W = writeable variable\n
 * P = private variable, internal use, do not read/write

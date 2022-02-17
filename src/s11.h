@@ -38,23 +38,101 @@
  */
  
   /** @defgroup core Driver core
- *  API functions for interacting with the driver
+ * API functions for interacting with the driver
+ * 
+ * Setup sensor:
+ * - Instantiate a s11_dev struct
+ * - Add callbacks to s11_dev
+ * - Write I2C address to s11_dev.i2c_address
+ * - Call s11_init()
+ * 
+ * 
+ * The driver is platform-agnostic so the user must adapt it by implementing read/write/delay wrappers
+ * that are platform-specific.
+ * 
+ * The following callbacks must be implemented:
+ * - Register a I2C read callback, s11_rw_fptr_t to s11_dev.read
+ * - Register a I2C write callback, s11_rw_fptr_t to s11_dev.read
+ * - Register a delay callback, s11_delay_fptr_t to s11_dev.delay
+ *
+ *
+ * **Read callback**
+ * A platform-specific read callback must be implemented to handle the I2C-communication
+ * The callback must have the same format as s11_rw_fptr_t
+ *
+ *
+ * The read callback must implement the follwoing I2C sequence: 
+ * - START + Slave address + R/W=0
+ * - STOP
+ * 
+ * - START + Slave address + R/W=0
+ * - Write: Register address
+ * - STOP
+ * 
+ * - START + Slave address + R/W=1
+ * - Read: Data (n)
+ * - Read: Data (n+1)
+ * - ...
+ * - Read: Data (n+len)
+ * - STOP
+ *  
+ * **Write callback**
+ * The write callback must implement the follwoing I2C sequence:
+ * The read callback must implement the follwoing I2C sequence:
+ * - START + Slave address + R/W=0
+ * - STOP
+ * 
+ * - START + Slave address + R/W=0
+ * - Write: Register address 
+ * - Write: Data (n)
+ * - Write: Data (n+1)
+ * - ...
+ * - Write: Data (n+len)
+ * - STOP 
  */
  
-  /** @defgroup info_status Sensor information and status
- *  API for reading sensor information and status
- */
+
   
  /** @defgroup calibration Calibration
- *  API for (re-)calibration of sensor
+ * API for (re-)calibration of sensor
+ * 
+ * Usage:
+ * - Select calibration method by setting bits in s11_cal.cal_cmd register
+ * - Set calibration target value in ppm in s11_cal.cal_target register (if performing a target calibration)
+ * - Call s11_calibrate() to perform calibration
+ * - Call s11_get_cal_status() to retrieve calibration status
+ * - Read calibration results from s11_cal.cal_status register
  */
  
  /** @defgroup measurement Measurement
- *  API for measuring CO2
+ * API for measuring CO2
+ * 
+ * Single measurement mode:
+ * - Call s11_start_meas()
+ * - Wait for nREADY pin to go hi
+ * - Call s11_get_state_data()
+ * - Power off/disable sensor (to save power)
+ * - Wait
+ * - Power on/enable sensor
+ * - Repeat
+ *
+ * Continuous measurement mode:
+ * - Call s11_get_meas_data()
+ * - Read results from s11_dev.s11_meas_res
+ * - Repeat
+
  */
  
  /** @defgroup settings Settings
- *  API for changing sensors internal settings
+ * API for changing sensors internal settings
+ *
+ * Writing settings:
+ * - Set registers in s11_dev.s11_dev_sett to desired values
+ * - Call s11_set_dev_settings()
+ *  
+ * Reading settings:
+ * - Call s11_get_dev_settings()
+ * - Read current settings from register s11_dev.s11_dev_sett
  */
 
 #ifndef S11_H_
@@ -70,19 +148,20 @@ extern "C" {
 
 // Function prototype declarations
 
-
 /**
- *  @brief Initialize the device,
- *  reads configuration and device id from the sensor.
- *  @param[in,out] dev : Instance of S11 structure
- *  @return Execution status, defined in s11_defs.h, S11_E_...
+ * @brief Initialize the device,
+ * reads configuration and device id from the sensor.
+ * @param[in,out] dev : Instance of S11 structure
+ * @return Execution status, defined in s11_defs.h, S11_E_...
+ * @ingroup core
  */
 int8_t s11_init(struct s11_dev *dev);
 
 /**
- *  @brief Reads error status from the sensor.
- *  Stores it in the device cluster.
- *  @param[in,out] dev : Instance of S11 structure
+ * @brief Reads error status from the sensor.
+ * Stores it in the device cluster.
+ * @param[in,out] dev : Instance of S11 structure
+ * @ingroup core
  */
 int8_t s11_get_status(struct s11_dev *dev);
 
@@ -131,7 +210,9 @@ int8_t s11_get_meas_data(struct s11_dev *dev);
 int8_t s11_get_state_data(struct s11_dev *dev);
 
 /** 
- * @brief read sensor settings from EEPROM
+ * @brief Read sensor settings from EEPROM
+ * - Read settings from sensor to s11_dev_sett struct
+ * 
  * @param[in,out] dev : Instance of S11 structure
  * @ingroup settings
  */
@@ -139,6 +220,11 @@ int8_t s11_get_dev_settings(struct s11_dev *dev);
 
 /** 
  * @brief Apply sensor settings to EEPROM and restart sensor
+ * - Applies settings in s11_dev_sett struct to sensor
+ * - Performs a limit check of parameters before any write
+ * - Performs a read before write and only writes if needed as to save EEPROM life
+ * - Function is blocking during restart
+ *
  * @param[in,out] dev : Instance of S11 structure
  * @ingroup settings
  */
@@ -147,6 +233,7 @@ int8_t s11_set_dev_settings(struct s11_dev *dev);
 /** 
  * @brief Restart sensor
  * @param[in,out] dev : Instance of S11 structure
+ * @ingroup core
  */
 int8_t s11_restart(struct s11_dev *dev);
 
